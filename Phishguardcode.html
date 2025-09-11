@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Press Start 2P', 'Inter', sans-serif;
+            background-color: #0b0f19;
+            background-image: url('https://i.pinimg.com/originals/5e/c0/bb/5ec0bbf93d147bf1db6c211f14f39471.gif');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            overflow-y: auto;
+            position: relative;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fcd34d;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes container-glow {
+            from { box-shadow: 0 0 10px rgba(251, 191, 36, 0.5), 0 0 20px rgba(251, 191, 36, 0.3); }
+            to { box-shadow: 0 0 15px rgba(251, 191, 36, 0.7), 0 0 30px rgba(251, 191, 36, 0.5); }
+        }
+        .container-shape {
+            clip-path: polygon(0% 10%, 10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%);
+            animation: container-glow 2s ease-in-out infinite alternate;
+        }
+        .pixel-text {
+            font-family: 'Press Start 2P', cursive;
+        }
+    </style>
+</head>
+<body class="text-white flex items-center justify-center min-h-screen p-4 md:p-8 relative">
+    <div class="bg-gray-800 p-8 md:p-12 shadow-2xl w-full max-w-2xl border-2 border-slate-700 transition-all duration-300 transform hover:scale-[1.01]
+                 bg-gradient-to-br from-slate-900 via-slate-900 to-gray-900 z-10 container-shape">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-yellow-400 mb-2 drop-shadow-lg pixel-text" style="text-shadow: 0 0 15px #fcd34d;">PhishGuard</h1>
+            <p class="text-slate-400 font-medium tracking-wide text-lg pixel-text">Your Personal Cyber Shield</p>
+        </header>
+        <main class="mb-8">
+            <label for="message-input" class="block text-slate-300 font-semibold text-lg mb-2 pixel-text">
+                Paste an email, SMS or Chat message to analyze:
+            </label>
+            <textarea id="message-input" rows="8" class="w-full p-4 text-slate-900 bg-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-yellow-400 transition-all resize-y placeholder:text-slate-500 pixel-text" placeholder="e.g., 'Pay Rs10,000 to this phone number 3487290876 and receive double the amount in return.'"></textarea>
+            <button id="analyze-button" class="mt-6 w-full bg-gradient-to-r from-amber-600 to-yellow-400 hover:from-amber-700 hover:to-yellow-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform transition-transform duration-200 hover:scale-105 active:scale-95 flex items-center justify-center pixel-text">
+                Scan Message
+                <span id="loading-spinner" class="ml-3 hidden loading-spinner"></span>
+            </button>
+        </main>
+        <section id="results-display" class="mt-8 transition-opacity duration-500 opacity-0 hidden">
+            <h2 class="text-3xl font-bold text-center mb-6 pixel-text">Analysis Report</h2>
+            <div id="result-card" class="p-8 rounded-2xl border-2 border-gray-600 transition-all duration-300 shadow-md">
+                <p id="scan-status" class="text-2xl md:text-3xl font-extrabold text-center mb-6 flex items-center justify-center pixel-text"></p>
+                <div id="explanation-box" class="bg-slate-800 p-6 rounded-xl text-slate-300 border border-slate-700">
+                    <p class="font-bold text-slate-200 mb-3 text-lg pixel-text">Why it was flagged:</p>
+                    <p id="explanation-text" class="text-base leading-relaxed pixel-text"></p>
+                </div>
+                <div id="pro-tip-box" class="bg-gray-950 p-6 rounded-xl text-red-500 border-2 border-red-500 mt-6 shadow-md hidden">
+                    <p class="font-bold text-lg mb-3 flex items-center pixel-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mr-2">
+                            <path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 01-1.06-1.06l6.22-6.22H3a.75.75 0 010-1.5h16.19l-6.22-6.22a.75.75 0 010-1.06z" clip-rule="evenodd" />
+                        </svg>
+                        PhishGuard Pro-Tip:
+                    </p>
+                    <p id="pro-tip-text" class="text-base leading-relaxed pixel-text"></p>
+                </div>
+            </div>
+        </section>
+        <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl text-center border-2 border-red-500 max-w-sm">
+                <p id="modal-message" class="text-white text-lg font-medium mb-6 pixel-text"></p>
+                <button id="modal-close-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-transform hover:scale-105 pixel-text">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const messageInput = document.getElementById('message-input');
+            const analyzeButton = document.getElementById('analyze-button');
+            const resultsDisplay = document.getElementById('results-display');
+            const scanStatus = document.getElementById('scan-status');
+            const explanationText = document.getElementById('explanation-text');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const proTipBox = document.getElementById('pro-tip-box');
+            const proTipText = document.getElementById('pro-tip-text');
+            const resultCard = document.getElementById('result-card');
+            const alertModal = document.getElementById('alert-modal');
+            const modalMessage = document.getElementById('modal-message');
+            const modalCloseButton = document.getElementById('modal-close-button');
+            
+            // The new threat pattern list with a score for each keyword
+            // UPDATED: Added a new 'financial scam' category with a high score
+            const threatPatterns = [
+                { keyword: 'account suspended', type: 'urgent threat', score: 10 },
+                { keyword: 'unauthorized login', type: 'urgent threat', score: 10 },
+                { keyword: 'verify your identity', type: 'personal info request', score: 8 },
+                { keyword: 'urgent action required', type: 'urgent threat', score: 9 },
+                { keyword: 'invoice overdue', type: 'financial pressure', score: 7 },
+                { keyword: 'pay to save', type: 'ransom/payment demand', score: 10 },
+                { keyword: 'instagram account', type: 'social media threat', score: 5 },
+                { keyword: 'blocked', type: 'status change threat', score: 7 },
+                { keyword: 'amazon order', type: 'e-commerce', score: 3 },
+                { keyword: 'paypal', type: 'financial pressure', score: 8 },
+                { keyword: 'suspicious activity', type: 'urgent threat', score: 8 },
+                { keyword: 'prize money', type: 'prize scam', score: 8 },
+                { keyword: 'lottery winner', type: 'prize scam', score: 8 },
+                { keyword: 'password reset', type: 'personal info request', score: 7 },
+                { keyword: 'free gift card', type: 'bait', score: 2 },
+                { keyword: 'pay', type: 'financial pressure', score: 11 },
+                { keyword: 'receive double', type: 'financial pressure', score: 9 },
+                { keyword: 're-verify', type: 'personal info request', score: 5 },
+                { keyword: 'account details', type: 'personal info request', score: 9 },
+                { keyword: 'click here', type: 'call to action', score: 8 },
+                { keyword: 'urgent', type: 'urgent threat', score: 9 },
+                // ADDED: New high-score pattern to catch financial scams
+                { keyword: 'receive double the amount', type: 'financial scam', score: 15 },
+            ];
+
+            // UPDATED: Lowered the threat threshold to make the detection more sensitive.
+            const THREAT_THRESHOLD = 8;
+
+            const securityProTips = [
+                "Never click on links in messages you weren't expecting. Always go directly to the company's official website.",
+                "Always check the sender's email address. Phishers often use addresses that look very similar but have small typos.",
+                "Be skeptical of any message that demands immediate action or uses threatening language. Legitimate companies rarely do this.",
+                "A lack of personalization (e.g., 'Dear Customer') can be a red flag. Legitimate messages usually address you by name.",
+                "Be on the lookout for weird grammar, spelling mistakes, or unusual sentence structure. These are classic signs of a scam."
+            ];
+
+            function showAlert(message) {
+                modalMessage.textContent = message;
+                alertModal.classList.remove('hidden');
+            }
+
+            modalCloseButton.addEventListener('click', () => {
+                alertModal.classList.add('hidden');
+            });
+
+            function scanForThreats(message) {
+                const normalizedMessage = message.toLowerCase();
+                let threatScore = 0;
+                let reason = "This message seems safe. We couldn't find any obvious signs of a phishing attempt.";
+                const detectedPatterns = [];
+
+                // UPDATED: Changed from a for loop to a for...of loop for cleaner code
+                for (const pattern of threatPatterns) {
+                    if (normalizedMessage.includes(pattern.keyword)) {
+                        threatScore += pattern.score;
+                        detectedPatterns.push(pattern);
+                    }
+                }
+                
+                // ADDED: Logic to detect financial requests to phone numbers or bank accounts
+                const financialRequestPattern = /(?:pay|send|transfer)\s+[\w\s]+\s+to\s+(?:phone\s+number|account)\s+\d+/i;
+                if (financialRequestPattern.test(message)) {
+                    threatScore += 20; // A very high score for this clear red flag
+                    detectedPatterns.push({ keyword: 'financial request to phone number/account', type: 'financial scam', score: 20 });
+                }
+
+                const urlDetector = /(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+/g;
+                const detectedUrls = normalizedMessage.match(urlDetector);
+
+                if (detectedUrls && detectedUrls.length > 0) {
+                    const firstUrl = detectedUrls[0];
+                    if (firstUrl.includes('@')) {
+                        threatScore += 20; // High score for this major red flag
+                        reason = `This message contains a URL with an '@' symbol (${firstUrl}), which is a common trick to hide the real destination. This is a big red flag.`;
+                    } else if (firstUrl.startsWith('http://') && !firstUrl.startsWith('https://')) {
+                        threatScore += 15; // High score for unencrypted link
+                        reason = `The link (${firstUrl}) is unencrypted (it uses 'http' instead of 'https'). This is a major security risk and a common phishing tactic.`;
+                    }
+                }
+                
+                let isMalicious = threatScore >= THREAT_THRESHOLD;
+                if (isMalicious) {
+                    const topPatterns = detectedPatterns.sort((a, b) => b.score - a.score).slice(0, 3);
+                    if (topPatterns.length > 0) {
+                        const topKeyword = topPatterns[0];
+                        // UPDATED: Made the reason more dynamic and specific
+                        reason = `This message was flagged because it uses the suspicious phrase: "${topKeyword.keyword}". This is a sign of a common phishing or scam attempt.`;
+                        if (topPatterns.length > 1) {
+                            reason += ` It also contains other suspicious elements like: ${topPatterns.slice(1).map(p => `"${p.keyword}"`).join(', ')}.`;
+                        }
+                    }
+                } else if (detectedUrls && detectedUrls.length > 0) {
+                    // UPDATED: This logic was moved outside the `isMalicious` block to ensure it's still flagged as a caution
+                    reason += ` The message contains a link. Even if it looks safe, always be cautious and verify the sender before clicking.`;
+                }
+
+                return { isMalicious, reason };
+            }
+            
+            analyzeButton.addEventListener('click', () => {
+                const userMessage = messageInput.value.trim();
+                if (!userMessage) {
+                    showAlert('Please enter a message to analyze.');
+                    return;
+                }
+                
+                analyzeButton.disabled = true;
+                loadingSpinner.classList.remove('hidden');
+                resultsDisplay.classList.add('hidden', 'opacity-0');
+                proTipBox.classList.add('hidden');
+                resultCard.classList.remove('border-red-500', 'border-emerald-400');
+                
+                setTimeout(() => {
+                    const analysisResult = scanForThreats(userMessage);
+                    if (analysisResult.isMalicious) {
+                        scanStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 mr-2 text-red-500"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" /></svg> Malicious`;
+                        scanStatus.classList.add("text-red-500");
+                        resultCard.classList.add("border-red-500");
+                        const randomTip = securityProTips[Math.floor(Math.random() * securityProTips.length)];
+                        proTipText.textContent = randomTip;
+                        proTipBox.classList.remove('hidden');
+                    } else {
+                        scanStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 mr-2 text-emerald-400"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg> Safe`;
+                        scanStatus.classList.add("text-emerald-400");
+                        resultCard.classList.add("border-emerald-400");
+                    }
+                    
+                    explanationText.textContent = analysisResult.reason;
+                    resultsDisplay.classList.remove('hidden');
+                    setTimeout(() => { resultsDisplay.classList.remove('opacity-0'); }, 50);
+                    analyzeButton.disabled = false;
+                    loadingSpinner.classList.add('hidden');
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>
