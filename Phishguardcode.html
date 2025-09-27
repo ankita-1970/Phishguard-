@@ -103,8 +103,7 @@
             const modalMessage = document.getElementById('modal-message');
             const modalCloseButton = document.getElementById('modal-close-button');
             
-            // The new threat pattern list with a score for each keyword
-            // UPDATED: Added a new 'financial scam' category with a high score
+            //threat pattern list with a score for each keyword
             const threatPatterns = [
                 { keyword: 'account suspended', type: 'urgent threat', score: 10 },
                 { keyword: 'unauthorized login', type: 'urgent threat', score: 10 },
@@ -127,11 +126,10 @@
                 { keyword: 'account details', type: 'personal info request', score: 9 },
                 { keyword: 'click here', type: 'call to action', score: 8 },
                 { keyword: 'urgent', type: 'urgent threat', score: 9 },
-                // ADDED: New high-score pattern to catch financial scams
                 { keyword: 'receive double the amount', type: 'financial scam', score: 15 },
             ];
 
-            // UPDATED: Lowered the threat threshold to make the detection more sensitive.
+            
             const THREAT_THRESHOLD = 8;
 
             const securityProTips = [
@@ -157,7 +155,6 @@
                 let reason = "This message seems safe. We couldn't find any obvious signs of a phishing attempt.";
                 const detectedPatterns = [];
 
-                // UPDATED: Changed from a for loop to a for...of loop for cleaner code
                 for (const pattern of threatPatterns) {
                     if (normalizedMessage.includes(pattern.keyword)) {
                         threatScore += pattern.score;
@@ -165,10 +162,9 @@
                     }
                 }
                 
-                // ADDED: Logic to detect financial requests to phone numbers or bank accounts
                 const financialRequestPattern = /(?:pay|send|transfer)\s+[\w\s]+\s+to\s+(?:phone\s+number|account)\s+\d+/i;
                 if (financialRequestPattern.test(message)) {
-                    threatScore += 20; // A very high score for this clear red flag
+                    threatScore += 20; //very high score for this clear red flag
                     detectedPatterns.push({ keyword: 'financial request to phone number/account', type: 'financial scam', score: 20 });
                 }
 
@@ -178,10 +174,10 @@
                 if (detectedUrls && detectedUrls.length > 0) {
                     const firstUrl = detectedUrls[0];
                     if (firstUrl.includes('@')) {
-                        threatScore += 20; // High score for this major red flag
+                        threatScore += 20; 
                         reason = `This message contains a URL with an '@' symbol (${firstUrl}), which is a common trick to hide the real destination. This is a big red flag.`;
                     } else if (firstUrl.startsWith('http://') && !firstUrl.startsWith('https://')) {
-                        threatScore += 15; // High score for unencrypted link
+                        threatScore += 15; //high score for unencrypted link
                         reason = `The link (${firstUrl}) is unencrypted (it uses 'http' instead of 'https'). This is a major security risk and a common phishing tactic.`;
                     }
                 }
@@ -191,14 +187,12 @@
                     const topPatterns = detectedPatterns.sort((a, b) => b.score - a.score).slice(0, 3);
                     if (topPatterns.length > 0) {
                         const topKeyword = topPatterns[0];
-                        // UPDATED: Made the reason more dynamic and specific
                         reason = `This message was flagged because it uses the suspicious phrase: "${topKeyword.keyword}". This is a sign of a common phishing or scam attempt.`;
                         if (topPatterns.length > 1) {
                             reason += ` It also contains other suspicious elements like: ${topPatterns.slice(1).map(p => `"${p.keyword}"`).join(', ')}.`;
                         }
                     }
                 } else if (detectedUrls && detectedUrls.length > 0) {
-                    // UPDATED: This logic was moved outside the `isMalicious` block to ensure it's still flagged as a caution
                     reason += ` The message contains a link. Even if it looks safe, always be cautious and verify the sender before clicking.`;
                 }
 
@@ -243,4 +237,5 @@
         });
     </script>
 </body>
+
 </html>
